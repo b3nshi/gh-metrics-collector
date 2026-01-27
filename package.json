@@ -1,0 +1,24 @@
+{
+  "name": "gh-metrics-collector",
+  "version": "1.0.0",
+  "description": "Github Metrics Report",
+  "scripts": {
+    "process": "node processor.js",
+    "start": "http-server -o dashboard.html",
+    "help": "node index.js --help"
+  },
+  "dependencies": {
+    "@octokit/rest": "^19.0.0",
+    "commander": "^11.0.0",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "author": "B3nshi <b3nshi@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/b3nshi/gh-metrics-collector/issues"
+  },
+  "homepage": "https://github.com/b3nshi/gh-metrics-collector#readme"
+}

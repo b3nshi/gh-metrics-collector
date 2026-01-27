@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #loader { transition: opacity 0.3s; } 
+        .hidden-loader { opacity: 0; pointer-events: none; }
+        .hint-text { font-size: 0.65rem; color: #94a3b8; font-style: italic; margin-top: 2px; }
+        .section-title { font-size: 0.75rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 0.5rem; }
+    </style>
+</head>
+<body class="bg-slate-50 p-6 md:p-12 text-slate-800 font-sans">
+
+    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 font-bold text-slate-400 tracking-widest uppercase text-xs">Assembling Insights...</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <header class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 id="repo-name" class="text-3xl font-black text-slate-900 tracking-tighter uppercase">-</h1>
+                <p id="gen-date" class="text-[10px] text-slate-400 mt-2 font-bold tracking-widest uppercase"></p>
+            </div>
+            <div class="text-center bg-indigo-50 px-6 py-3 rounded-xl border border-indigo-100">
+                <p class="text-[10px] uppercase font-bold text-indigo-500">DORA: Avg Lead Time</p>
+                <p id="stat-avg-lead" class="text-2xl font-black text-indigo-700">-</p>
+                <p class="hint-text">Time from 1st commit to merge</p>
+            </div>
+        </header>
+
+        <h2 class="section-title">Key Performance Indicators</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Merged</p>
+                <p id="glob-merged" class="text-2xl font-bold">-</p>
+                <p class="hint-text">Volume of completed work</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Review (TTM)</p>
+                <p id="stat-avg-time" class="text-2xl font-bold text-rose-500">-</p>
+                <p class="hint-text">Slowest: <span id="txt-slowest-val" class="font-bold text-rose-400">...</span> <a id="link-slow" target="_blank" class="underline text-rose-300">🔗</a></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg PR Size</p>
+                <p id="size-avg" class="text-2xl font-bold text-blue-500">-</p>
+                <p class="hint-text">Biggest: <span id="txt-biggest-val" class="font-bold text-blue-400">...</span> <a id="link-biggest" target="_blank" class="underline text-blue-300">🔗</a></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engagement Outlier</p>
+                <p id="txt-most-comm-val" class="text-2xl font-bold text-indigo-600">-</p>
+                <p class="hint-text">Max comments on <a id="link-most-comm" target="_blank" class="underline font-bold">PR#<span id="txt-most-comm"></span></a></p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Velocity & Advanced Analytics</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Size vs Speed Correlation</h4>
+                <canvas id="chart-correlation" height="250"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">TTM vs Lead Time (DORA)</h4>
+                <canvas id="chart-trends" height="250"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Team Engagement</h4>
+                <canvas id="chart-engagement" height="250"></canvas>
+            </div>
+        </div>
+
+        <h2 class="section-title">Monthly Volume & Averages</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">PR Count per Month</h4>
+                <canvas id="chart-count-month" height="200"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Avg PR Size per Month</h4>
+                <canvas id="chart-size-month" height="200"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Avg TTM per Month</h4>
+                <canvas id="chart-ttm-month" height="200"></canvas>
+            </div>
+        </div>
+
+        <h2 class="section-title">Leaderboards</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Mergers</h4>
+                <ul id="rank-mergers" class="space-y-2 text-xs"></ul>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Reviewers</h4>
+                <ul id="rank-reviews" class="space-y-2 text-xs"></ul>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Dev Velocity (Avg TTM)</h4>
+                <ul id="rank-ttm" class="space-y-2 text-xs"></ul>
+            </div>
+        </div>
+
+        <h2 class="section-title">Audit Log</h2>
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold">Detailed PR History</h3>
+                <div class="flex gap-4 items-center text-xs">
+                    <button id="prevPage" class="px-4 py-1 bg-slate-100 rounded hover:bg-slate-200 disabled:opacity-30 font-bold">PREV</button>
+                    <span id="pageInfo" class="font-mono text-slate-400 uppercase tracking-tighter">...</span>
+                    <button id="nextPage" class="px-4 py-1 bg-slate-100 rounded hover:bg-slate-200 disabled:opacity-30 font-bold">NEXT</button>
+                </div>
+            </div>
+            <table class="w-full text-left text-sm">
+                <thead class="border-b bg-slate-50 text-[10px] uppercase font-black">
+                    <tr>
+                        <th class="py-3 px-2">#</th>
+                        <th>Author</th>
+                        <th>Lines</th>
+                        <th>Review (TTM)</th>
+                        <th>Lead Time</th>
+                        <th>Title</th>
+                    </tr>
+                </thead>
+                <tbody id="full-pr-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const formatTime = (h) => {
+            const val = parseFloat(h);
+            if (isNaN(val)) return "0h";
+            return val < 24 ? `${val.toFixed(1)}h` : `${val.toFixed(1)}h (${(val/24).toFixed(1)}d)`;
+        };
+
+        let allPrs = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        fetch('ui-stats.json').then(res => res.json()).then(data => {
+            document.getElementById('repo-name').innerText = data.repoInfo.name;
+            document.getElementById('gen-date').innerText = `Generated for: ${data.period.from} to ${data.period.until}`;
+            
+            document.getElementById('glob-merged').innerText = data.summary.merged;
+            document.getElementById('size-avg').innerText = Math.round(data.summary.avgSize) + " lines";
+            document.getElementById('stat-avg-time').innerText = formatTime(data.summary.avgTtm);
+            document.getElementById('stat-avg-lead').innerText = formatTime(data.summary.avgLeadTime);
+
+            if (data.outliers) {
+                // Time Outlier
+                document.getElementById('txt-slowest-val').innerText = formatTime(data.outliers.slowest.mergeTime);
+                document.getElementById('link-slow').href = data.outliers.slowest.url;
+                
+                // Size Outlier
+                document.getElementById('txt-biggest-val').innerText = data.outliers.biggest.size;
+                document.getElementById('link-biggest').href = data.outliers.biggest.url;
+                
+                // Engagement Outlier
+                document.getElementById('txt-most-comm-val').innerText = data.outliers.mostComments.commentCount + " comments";
+                document.getElementById('txt-most-comm').innerText = data.outliers.mostComments.number;
+                document.getElementById('link-most-comm').href = data.outliers.mostComments.url;
+            }
+
+            const months = data.monthlyStats.map(s => s.month);
+            
+            // Charts Row 1
+            new Chart(document.getElementById('chart-correlation'), { 
+                type: 'scatter', 
+                data: { datasets: [{ label: 'PR Size/Time', data: data.scatterData, backgroundColor: 'rgba(59, 130, 246, 0.4)' }] },
+                options: { scales: { x: { title: { display: true, text: 'Lines' }}, y: { title: { display: true, text: 'Hours' }} }}
+            });
+            
+            new Chart(document.getElementById('chart-trends'), { 
+                type: 'line', 
+                data: { labels: months, datasets: [
+                    { label: 'Avg TTM', data: data.monthlyStats.map(s=>s.avgTtm), borderColor: '#f43f5e', tension: 0.3 },
+                    { label: 'Avg Lead Time', data: data.monthlyStats.map(s=>s.avgLeadTime), borderColor: '#6366f1', tension: 0.3 }
+                ]} 
+            });
+
+            new Chart(document.getElementById('chart-engagement'), { 
+                type: 'bar', 
+                data: { labels: months, datasets: [
+                    { label: 'Avg Reviewers', data: data.monthlyStats.map(s=>s.avgReviewers), backgroundColor: 'rgba(16, 185, 129, 0.5)' },
+                    { label: 'Avg Comments', data: data.monthlyStats.map(s=>s.avgComments), borderColor: '#8b5cf6', type: 'line', tension: 0.3 }
+                ]} 
+            });
+
+            // Charts Row 2 (Added as requested)
+            new Chart(document.getElementById('chart-count-month'), { 
+                type: 'bar', 
+                data: { labels: months, datasets: [{ label: 'PRs Merged', data: data.monthlyStats.map(s=>s.count), backgroundColor: '#10b981' }]} 
+            });
+
+            new Chart(document.getElementById('chart-size-month'), { 
+                type: 'line', 
+                data: { labels: months, datasets: [{ label: 'Avg Size', data: data.monthlyStats.map(s=>s.avgSize), borderColor: '#3b82f6', fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)' }]} 
+            });
+
+            new Chart(document.getElementById('chart-ttm-month'), { 
+                type: 'line', 
+                data: { labels: months, datasets: [{ label: 'Avg TTM', data: data.monthlyStats.map(s=>s.avgTtm), borderColor: '#f43f5e', borderDash: [5, 5] }]} 
+            });
+
+            // Rankings
+            const render = (id, list, key, isTime=false) => {
+                const sorted = [...list].sort((a,b) => b[key] - a[key]).slice(0,5);
+                document.getElementById(id).innerHTML = sorted.map(u => `
+                    <li class="flex justify-between border-b border-slate-50 py-1.5">
+                        <a href="https://github.com/${u.login}" target="_blank" class="text-blue-500 font-bold hover:underline">${u.login}</a>
+                        <span class="font-mono text-slate-400">${isTime ? formatTime(u[key]) : u[key]}</span>
+                    </li>`).join('');
+            };
+            render('rank-mergers', data.rankings.mergers, 'merged');
+            render('rank-reviews', data.rankings.reviewers, 'count');
+            render('rank-ttm', data.rankings.mergers.filter(u=>u.merged>0), 'avgTime', true);
+
+            document.getElementById('loader').classList.add('hidden-loader');
+            return fetch('ui-details.json');
+        })
+        .then(res => res.json())
+        .then(details => {
+            allPrs = details;
+            updateTable();
+        });
+
+        function updateTable() {
+            const start = (currentPage - 1) * rowsPerPage;
+            const paginatedItems = allPrs.slice(start, start + rowsPerPage);
+            
+            document.getElementById('full-pr-table').innerHTML = paginatedItems.map(p => `
+                <tr class="border-b hover:bg-slate-50 transition-colors text-xs">
+                    <td class="py-3 px-2 font-mono"><a href="${p.url}" target="_blank" class="text-blue-500 font-bold">#${p.number}</a></td>
+                    <td class="font-bold text-slate-600">${p.author}</td>
+                    <td>${p.size}</td>
+                    <td>${formatTime(p.mergeTime)}</td>
+                    <td class="text-indigo-600 font-bold">${formatTime(p.leadTime)}</td>
+                    <td class="truncate max-w-xs text-slate-500 italic">${p.title}</td>
+                </tr>`).join('');
+                
+            document.getElementById('pageInfo').innerText = `PAGE ${currentPage} OF ${Math.ceil(allPrs.length / rowsPerPage)}`;
+            document.getElementById('prevPage').disabled = (currentPage === 1);
+            document.getElementById('nextPage').disabled = (currentPage === Math.ceil(allPrs.length / rowsPerPage));
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => { if(currentPage > 1) { currentPage--; updateTable(); } });
+        document.getElementById('nextPage').addEventListener('click', () => { if(currentPage < Math.ceil(allPrs.length / rowsPerPage)) { currentPage++; updateTable(); } });
+    </script>
+</body>
+</html>
