@@ -10,11 +10,50 @@
         .hidden-loader { opacity: 0; pointer-events: none; }
         .hint-text { font-size: 0.65rem; color: #94a3b8; font-style: italic; margin-top: 2px; }
         .section-title { font-size: 0.75rem; font-weight: 800; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 0.5rem; }
+        .hidden-section { display: none !important; }
+        /* Sidebar/Menu Styles */
+        #feature-menu { transform: translateX(100%); transition: transform 0.3s ease; }
+        #feature-menu.open { transform: translateX(0); }
+        .chart-container-sm { position: relative; height: 320px; width: 100%; }
     </style>
 </head>
-<body class="bg-slate-50 p-6 md:p-12 text-slate-800 font-sans">
+<body class="bg-slate-50 p-6 md:p-12 text-slate-800 font-sans relative overflow-x-hidden">
 
-    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+    <button onclick="toggleMenu()" class="fixed top-6 right-6 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+    </button>
+
+    <aside id="feature-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-40 p-8 border-l border-slate-200">
+        <h3 class="font-bold text-xl mb-6">Dashboard Features</h3>
+        <div class="space-y-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked onchange="toggleSection('sec-kpi')"> KPI Summary Cards
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" onchange="toggleSection('sec-balance')" id="toggle-balance"> 
+                <span class="text-blue-600 font-bold">Throughput Balance</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked onchange="toggleSection('sec-velocity')"> Velocity Graphs
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked onchange="toggleSection('sec-monthly')"> Monthly Trends
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked onchange="toggleSection('sec-ranks')"> Leaderboards
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked onchange="toggleSection('sec-audit')"> Audit Log
+            </label>
+        </div>
+        <button onclick="localStorage.removeItem('balance_state'); location.reload();" class="mt-12 text-[10px] text-red-500 font-bold underline uppercase">Reset Manual Data</button>
+        <br>
+        <button onclick="toggleMenu()" class="mt-4 text-sm text-slate-400 underline uppercase tracking-widest font-bold">Close Menu</button>
+    </aside>
+
+    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-center">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         <p class="mt-4 font-bold text-slate-400 tracking-widest uppercase text-xs">Assembling Insights...</p>
     </div>
@@ -32,126 +71,181 @@
             </div>
         </header>
 
-        <h2 class="section-title">Key Performance Indicators</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <section id="sec-balance" class="mb-12 hidden-section">
+            <h2 class="section-title">Throughput Balance Analysis (Product vs Engineering)</h2>
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Merged</p>
-                <p id="glob-merged" class="text-2xl font-bold">-</p>
-                <p class="hint-text">Volume of completed work</p>
-            </div>
-            
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Review (TTM)</p>
-                <p id="stat-avg-time" class="text-2xl font-bold text-rose-500">-</p>
-                <p class="hint-text">Slowest: <span id="txt-slowest-val" class="font-bold text-rose-400">...</span> <a id="link-slow" target="_blank" class="underline text-rose-300">🔗</a></p>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg PR Size</p>
-                <p id="size-avg" class="text-2xl font-bold text-blue-500">-</p>
-                <p class="hint-text">Biggest: <span id="txt-biggest-val" class="font-bold text-blue-400">...</span> <a id="link-biggest" target="_blank" class="underline text-blue-300">🔗</a></p>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engagement Outlier</p>
-                <p id="txt-most-comm-val" class="text-2xl font-bold text-indigo-600">-</p>
-                <p class="hint-text">Max comments on <a id="link-most-comm" target="_blank" class="underline font-bold">PR#<span id="txt-most-comm"></span></a></p>
-            </div>
-        </div>
-
-        <h2 class="section-title">Velocity & Advanced Analytics</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Size vs Speed Correlation</h4>
-                <canvas id="chart-correlation" height="250"></canvas>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">TTM vs Lead Time (DORA)</h4>
-                <canvas id="chart-trends" height="250"></canvas>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Team Engagement</h4>
-                <canvas id="chart-engagement" height="250"></canvas>
-            </div>
-        </div>
-
-        <h2 class="section-title">Monthly Volume & Averages</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">PR Count per Month</h4>
-                <canvas id="chart-count-month" height="200"></canvas>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Avg PR Size per Month</h4>
-                <canvas id="chart-size-month" height="200"></canvas>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Avg TTM per Month</h4>
-                <canvas id="chart-ttm-month" height="200"></canvas>
-            </div>
-        </div>
-
-        <h2 class="section-title">Leaderboards</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Mergers</h4>
-                <ul id="rank-mergers" class="space-y-2 text-xs"></ul>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Reviewers</h4>
-                <ul id="rank-reviews" class="space-y-2 text-xs"></ul>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Dev Velocity (Avg TTM)</h4>
-                <ul id="rank-ttm" class="space-y-2 text-xs"></ul>
-            </div>
-        </div>
-
-        <h2 class="section-title">Audit Log</h2>
-        <div class="bg-white p-8 rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-bold">Detailed PR History</h3>
-                <div class="flex gap-4 items-center text-xs">
-                    <button id="prevPage" class="px-4 py-1 bg-slate-100 rounded hover:bg-slate-200 disabled:opacity-30 font-bold">PREV</button>
-                    <span id="pageInfo" class="font-mono text-slate-400 uppercase tracking-tighter">...</span>
-                    <button id="nextPage" class="px-4 py-1 bg-slate-100 rounded hover:bg-slate-200 disabled:opacity-30 font-bold">NEXT</button>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="lg:col-span-1 space-y-4 border-r pr-4">
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold uppercase text-slate-400">
+                            <div>Start<input type="date" id="balance-start" class="w-full border rounded p-1 text-slate-800" onchange="initThroughputLogic()"></div>
+                            <div>End<input type="date" id="balance-end" class="w-full border rounded p-1 text-slate-800" onchange="initThroughputLogic()"></div>
+                        </div>
+                        <select id="balance-division" class="w-full border rounded p-1 text-xs" onchange="initThroughputLogic()">
+                            <option value="1">1 Week Division</option>
+                            <option value="2">2 Weeks (Sprint)</option>
+                        </select>
+                        <div id="manual-inputs" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+                        <button onclick="updateBalanceChart(true)" class="w-full bg-blue-600 text-white text-[10px] font-bold py-2 rounded uppercase tracking-widest">Apply & Save</button>
+                    </div>
+                    <div class="lg:col-span-3">
+                        <div class="chart-container-sm">
+                            <canvas id="chart-throughput-balance"></canvas>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 text-[10px] text-slate-400 italic gap-4">
+                            <p>🟢 <b>Tasks:</b> Created → Picked → Completed</p>
+                            <p>🔵 <b>PRs:</b> Carry-over → Total WIP (New + Carry) → Merged</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <table class="w-full text-left text-sm">
-                <thead class="border-b bg-slate-50 text-[10px] uppercase font-black">
-                    <tr>
-                        <th class="py-3 px-2">#</th>
-                        <th>Author</th>
-                        <th>Lines</th>
-                        <th>Review (TTM)</th>
-                        <th>Lead Time</th>
-                        <th>Title</th>
-                    </tr>
-                </thead>
-                <tbody id="full-pr-table"></tbody>
-            </table>
-        </div>
+        </section>
+
+        <section id="sec-kpi">
+            <h2 class="section-title">Key Performance Indicators</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Merged</p>
+                    <p id="glob-merged" class="text-2xl font-bold">-</p>
+                    <p class="hint-text">Volume of completed work</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Review (TTM)</p>
+                    <p id="stat-avg-time" class="text-2xl font-bold text-rose-500">-</p>
+                    <p class="hint-text">Slowest: <span id="txt-slowest-val" class="font-bold text-rose-400">...</span> <a id="link-slow" target="_blank" class="underline text-rose-300">🔗</a></p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg PR Size</p>
+                    <p id="size-avg" class="text-2xl font-bold text-blue-500">-</p>
+                    <p class="hint-text">Biggest: <span id="txt-biggest-val" class="font-bold text-blue-400">...</span> <a id="link-biggest" target="_blank" class="underline text-blue-300">🔗</a></p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engagement Outlier</p>
+                    <p id="txt-most-comm-val" class="text-2xl font-bold text-indigo-600 truncate">-</p>
+                    <p class="hint-text">Max comments on <a id="link-most-comm" target="_blank" class="underline font-bold">PR#<span id="txt-most-comm"></span></a></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-velocity">
+            <h2 class="section-title">Velocity & Advanced Analytics</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Size vs Speed Correlation</h4>
+                    <canvas id="chart-correlation" height="250"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">TTM vs Lead Time (DORA)</h4>
+                    <canvas id="chart-trends" height="250"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Team Engagement</h4>
+                    <canvas id="chart-engagement" height="250"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-monthly">
+            <h2 class="section-title">Monthly Volume & Averages</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">PR Count per Month</h4>
+                    <canvas id="chart-count-month" height="200"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">PR Size Variance (Min/Avg/Max)</h4>
+                    <canvas id="chart-size-month" height="200"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 text-center">Avg TTM per Month</h4>
+                    <canvas id="chart-ttm-month" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-ranks">
+            <h2 class="section-title">Leaderboards</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Mergers</h4>
+                    <ul id="rank-mergers" class="space-y-2 text-xs"></ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Top Reviewers</h4>
+                    <ul id="rank-reviews" class="space-y-2 text-xs"></ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">Dev Velocity (Avg TTM)</h4>
+                    <ul id="rank-ttm" class="space-y-2 text-xs"></ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-audit">
+            <h2 class="section-title">Audit Log</h2>
+            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b bg-slate-50 text-[10px] uppercase font-black">
+                        <tr><th class="py-3 px-2">#</th><th>Author</th><th>Lines</th><th>TTM</th><th>Lead</th><th>Title</th></tr>
+                    </thead>
+                    <tbody id="full-pr-table"></tbody>
+                </table>
+                <div class="flex justify-between mt-4 items-center">
+                   <button id="prevPage" class="px-4 py-1 bg-slate-100 rounded disabled:opacity-30 font-bold text-xs">PREV</button>
+                   <span id="pageInfo" class="text-[10px] font-mono text-slate-400 uppercase">...</span>
+                   <button id="nextPage" class="px-4 py-1 bg-slate-100 rounded disabled:opacity-30 font-bold text-xs">NEXT</button>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
+        // Menu & Section Toggles
+        function toggleMenu() { document.getElementById('feature-menu').classList.toggle('open'); }
+        function toggleSection(id) { document.getElementById(id).classList.toggle('hidden-section'); }
+
         const formatTime = (h) => {
             const val = parseFloat(h);
-            if (isNaN(val)) return "0h";
             return val < 24 ? `${val.toFixed(1)}h` : `${val.toFixed(1)}h (${(val/24).toFixed(1)}d)`;
         };
 
         let allPrs = [];
         let currentPage = 1;
         const rowsPerPage = 10;
+        let balanceChart = null;
+        let reportData = null;
+
+        // Custom Plugin for Vertical Lines
+        const verticalLinePlugin = {
+            id: 'verticalLinePlugin',
+            afterDraw: (chart) => {
+                if (chart.config.options.plugins.verticalLinePlugin?.enabled) {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+                    chart.data.labels.forEach((label, index) => {
+                        if (label === '|') {
+                            const x = xAxis.getPixelForTick(index);
+                            ctx.save(); ctx.beginPath(); ctx.moveTo(x, yAxis.top); ctx.lineTo(x, yAxis.bottom);
+                            ctx.lineWidth = 1; ctx.strokeStyle = '#e2e8f0'; ctx.stroke(); ctx.restore();
+                        }
+                    });
+                }
+            }
+        };
+        Chart.register(verticalLinePlugin);
 
         fetch('ui-stats.json').then(res => res.json()).then(data => {
+            reportData = data;
             document.getElementById('repo-name').innerText = data.repoInfo.name;
-            document.getElementById('gen-date').innerText = `Generated for: ${data.period.from} to ${data.period.until}`;
-            
+            document.getElementById('gen-date').innerText = `Range: ${data.period.from} to ${data.period.until}`;
             document.getElementById('glob-merged').innerText = data.summary.merged;
             document.getElementById('size-avg').innerText = Math.round(data.summary.avgSize) + " lines";
             document.getElementById('stat-avg-time').innerText = formatTime(data.summary.avgTtm);
             document.getElementById('stat-avg-lead').innerText = formatTime(data.summary.avgLeadTime);
+
+            // Defaults for Balance Analysis
+            document.getElementById('balance-start').value = data.period.from;
+            document.getElementById('balance-end').value = data.period.until;
 
             if (data.outliers) {
                 // Time Outlier
@@ -163,7 +257,7 @@
                 document.getElementById('link-biggest').href = data.outliers.biggest.url;
                 
                 // Engagement Outlier
-                document.getElementById('txt-most-comm-val').innerText = data.outliers.mostComments.commentCount + " comments";
+                document.getElementById('txt-most-comm-val').innerText = data.outliers.mostComments.commentCount + " comms";
                 document.getElementById('txt-most-comm').innerText = data.outliers.mostComments.number;
                 document.getElementById('link-most-comm').href = data.outliers.mostComments.url;
             }
@@ -188,22 +282,30 @@
             new Chart(document.getElementById('chart-engagement'), { 
                 type: 'bar', 
                 data: { labels: months, datasets: [
-                    { label: 'Avg Reviewers', data: data.monthlyStats.map(s=>s.avgReviewers), backgroundColor: 'rgba(16, 185, 129, 0.5)' },
-                    { label: 'Avg Comments', data: data.monthlyStats.map(s=>s.avgComments), borderColor: '#8b5cf6', type: 'line', tension: 0.3 }
+                    { label: 'Reviewers', data: data.monthlyStats.map(s=>s.avgReviewers), backgroundColor: 'rgba(16, 185, 129, 0.5)' },
+                    { label: 'Comments', data: data.monthlyStats.map(s=>s.avgComments), borderColor: '#8b5cf6', type: 'line', tension: 0.3 }
                 ]} 
             });
 
-            // Charts Row 2 (Added as requested)
+            // Monthly Trends
             new Chart(document.getElementById('chart-count-month'), { 
                 type: 'bar', 
                 data: { labels: months, datasets: [{ label: 'PRs Merged', data: data.monthlyStats.map(s=>s.count), backgroundColor: '#10b981' }]} 
             });
-
+            
+            // SIZE CHART WITH MIN/MAX
             new Chart(document.getElementById('chart-size-month'), { 
                 type: 'line', 
-                data: { labels: months, datasets: [{ label: 'Avg Size', data: data.monthlyStats.map(s=>s.avgSize), borderColor: '#3b82f6', fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)' }]} 
+                data: { 
+                    labels: months, 
+                    datasets: [
+                        { label: 'Max Size', data: data.monthlyStats.map(s=>s.maxSize || 0), borderColor: '#ef4444', borderDash: [5, 5], tension: 0.1, pointRadius: 2 },
+                        { label: 'Avg Size', data: data.monthlyStats.map(s=>s.avgSize), borderColor: '#3b82f6', fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.3 },
+                        { label: 'Min Size', data: data.monthlyStats.map(s=>s.minSize || 0), borderColor: '#10b981', borderDash: [2, 2], tension: 0.1, pointRadius: 2 }
+                    ]
+                } 
             });
-
+            
             new Chart(document.getElementById('chart-ttm-month'), { 
                 type: 'line', 
                 data: { labels: months, datasets: [{ label: 'Avg TTM', data: data.monthlyStats.map(s=>s.avgTtm), borderColor: '#f43f5e', borderDash: [5, 5] }]} 
@@ -213,7 +315,7 @@
             const render = (id, list, key, isTime=false) => {
                 const sorted = [...list].sort((a,b) => b[key] - a[key]).slice(0,5);
                 document.getElementById(id).innerHTML = sorted.map(u => `
-                    <li class="flex justify-between border-b border-slate-50 py-1.5">
+                    <li class="flex justify-between border-b border-slate-50 py-1.5 px-2 text-xs">
                         <a href="https://github.com/${u.login}" target="_blank" class="text-blue-500 font-bold hover:underline">${u.login}</a>
                         <span class="font-mono text-slate-400">${isTime ? formatTime(u[key]) : u[key]}</span>
                     </li>`).join('');
@@ -228,23 +330,120 @@
         .then(res => res.json())
         .then(details => {
             allPrs = details;
+            loadBalanceState();
             updateTable();
         });
+
+        // Throughput Balance Logic
+        function initThroughputLogic() {
+            const start = new Date(document.getElementById('balance-start').value);
+            const end = new Date(document.getElementById('balance-end').value);
+            if(isNaN(start) || isNaN(end)) return;
+
+            const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            const divWeeks = parseInt(document.getElementById('balance-division').value);
+            const steps = Math.max(1, Math.ceil(diffDays / (7 * divWeeks)));
+            
+            const container = document.getElementById('manual-inputs');
+            container.innerHTML = '';
+            for(let i=1; i<=steps; i++) {
+                container.innerHTML += `
+                    <div class="p-2 bg-slate-50 rounded border mb-1">
+                        <div class="text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-tight">Period ${i} Tasks</div>
+                        <div class="grid grid-cols-3 gap-1">
+                            <input type="number" class="input-created border rounded p-1 text-[10px]" placeholder="Cre" value="0">
+                            <input type="number" class="input-picked border rounded p-1 text-[10px]" placeholder="Pic" value="0">
+                            <input type="number" class="input-done border rounded p-1 text-[10px]" placeholder="Done" value="0">
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function updateBalanceChart(save = false) {
+            const start = new Date(document.getElementById('balance-start').value);
+            const divWeeks = parseInt(document.getElementById('balance-division').value);
+            const rawCreated = Array.from(document.querySelectorAll('.input-created')).map(i => parseInt(i.value) || 0);
+            const rawPicked = Array.from(document.querySelectorAll('.input-picked')).map(i => parseInt(i.value) || 0);
+            const rawDone = Array.from(document.querySelectorAll('.input-done')).map(i => parseInt(i.value) || 0);
+
+            if (save) {
+                localStorage.setItem('balance_state', JSON.stringify({
+                    start: document.getElementById('balance-start').value,
+                    end: document.getElementById('balance-end').value,
+                    div: divWeeks, created: rawCreated, picked: rawPicked, completed: rawDone
+                }));
+            }
+
+            const taskData = []; const prData = []; const labels = [];
+            rawCreated.forEach((val, i) => {
+                const currentStart = new Date(start.getTime() + (i * divWeeks * 7 * 24 * 60 * 60 * 1000));
+                const currentEnd = new Date(currentStart.getTime() + (divWeeks * 7 * 24 * 60 * 60 * 1000));
+                
+                taskData.push(val, rawPicked[i], rawDone[i]);
+
+                const carryOver = allPrs.filter(p => {
+                    const mDate = new Date(p.month + "-01");
+                    const cDate = new Date(mDate.getTime() - (p.mergeTime * 60 * 60 * 1000)); 
+                    return mDate >= currentStart && cDate < currentStart;
+                }).length;
+
+                const mergedInPeriod = allPrs.filter(p => {
+                    const mDate = new Date(p.month + "-01");
+                    return mDate >= currentStart && mDate < currentEnd;
+                }).length;
+
+                prData.push(carryOver, carryOver + mergedInPeriod, mergedInPeriod);
+                labels.push(`P${i+1}: S`, `P${i+1}: WIP`, `P${i+1}: E`);
+                if(i < rawCreated.length - 1) { taskData.push(null); prData.push(null); labels.push('|'); }
+            });
+
+            const ctx = document.getElementById('chart-throughput-balance').getContext('2d');
+            if(balanceChart) balanceChart.destroy();
+            balanceChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: [
+                    { label: 'Task Throughput (Demand)', data: taskData, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0, pointRadius: 4 },
+                    { label: 'PR Lifecycle (Supply)', data: prData, borderColor: '#3b82f6', backgroundColor: '#3b82f6', borderDash: [4, 2], tension: 0, pointRadius: 4 }
+                ]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        verticalLinePlugin: { enabled: true },
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } }
+                    },
+                    scales: { 
+                        x: { grid: { display: false }, ticks: { font: { size: 8 }, autoSkip: false } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function loadBalanceState() {
+            const saved = localStorage.getItem('balance_state');
+            if (!saved) { initThroughputLogic(); return; }
+            const state = JSON.parse(saved);
+            document.getElementById('balance-start').value = state.start;
+            document.getElementById('balance-end').value = state.end;
+            document.getElementById('balance-division').value = state.div;
+            initThroughputLogic();
+            document.querySelectorAll('.input-created').forEach((el, i) => el.value = state.created[i] || 0);
+            document.querySelectorAll('.input-picked').forEach((el, i) => el.value = state.picked[i] || 0);
+            document.querySelectorAll('.input-done').forEach((el, i) => el.value = state.completed[i] || 0);
+            updateBalanceChart(false);
+        }
 
         function updateTable() {
             const start = (currentPage - 1) * rowsPerPage;
             const paginatedItems = allPrs.slice(start, start + rowsPerPage);
-            
             document.getElementById('full-pr-table').innerHTML = paginatedItems.map(p => `
-                <tr class="border-b hover:bg-slate-50 transition-colors text-xs">
-                    <td class="py-3 px-2 font-mono"><a href="${p.url}" target="_blank" class="text-blue-500 font-bold">#${p.number}</a></td>
+                <tr class="border-b hover:bg-slate-50 transition-colors text-[11px]">
+                    <td class="py-2 px-2 font-mono"><a href="${p.url}" target="_blank" class="text-blue-500 font-bold">#${p.number}</a></td>
                     <td class="font-bold text-slate-600">${p.author}</td>
-                    <td>${p.size}</td>
-                    <td>${formatTime(p.mergeTime)}</td>
+                    <td>${p.size}</td><td>${formatTime(p.mergeTime)}</td>
                     <td class="text-indigo-600 font-bold">${formatTime(p.leadTime)}</td>
-                    <td class="truncate max-w-xs text-slate-500 italic">${p.title}</td>
+                    <td class="truncate max-w-xs italic text-slate-400 font-medium">${p.title}</td>
                 </tr>`).join('');
-                
             document.getElementById('pageInfo').innerText = `PAGE ${currentPage} OF ${Math.ceil(allPrs.length / rowsPerPage)}`;
             document.getElementById('prevPage').disabled = (currentPage === 1);
             document.getElementById('nextPage').disabled = (currentPage === Math.ceil(allPrs.length / rowsPerPage));

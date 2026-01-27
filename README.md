@@ -7,9 +7,9 @@ A professional-grade engineering intelligence tool designed to analyze GitHub re
 ## 🚀 Quick Start
 
 1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 2. Step 1: Collect Raw Data Fetches historical data from GitHub. The script uses deep-crawling pagination to ensure all PRs in the range are captured.
 

@@ -18,10 +18,15 @@ function processMetrics() {
     const monthlyStats = months.map(m => {
         const sub = prs.filter(p => p.month === m);
         const count = sub.length;
+        // Sort to find extremes
+        const sizes = sub.map(p => p.size).sort((a, b) => a - b);
+        
         return {
             month: m,
             count: count,
             avgSize: sub.reduce((a, b) => a + b.size, 0) / count,
+            minSize: sizes[0] || 0, // NEW
+            maxSize: sizes[sizes.length - 1] || 0, // NEW
             avgTtm: sub.reduce((a, b) => a + b.mergeTime, 0) / count,
             avgLeadTime: sub.reduce((a, b) => a + b.leadTime, 0) / count,
             avgComments: sub.reduce((a, b) => a + b.commentCount, 0) / count,
