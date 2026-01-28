@@ -4,8 +4,8 @@
   "description": "Github Metrics Report",
   "scripts": {
     "collect": "node scripts/metrics-collector.js",
-    "process": "node scripts/processor.js",
-    "start": "node scripts/processor.js && http-server -o dashboard.html"
+    "process": "node scripts/data-preprocessor.js",
+    "start": "node scripts/data-preprocessor.js && http-server -o dashboard.html"
   },
   "dependencies": {
     "@octokit/rest": "^19.0.0",
