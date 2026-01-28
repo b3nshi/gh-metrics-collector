@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Github Metrics Report",
   "scripts": {
-    "process": "node processor.js",
-    "start": "http-server -o dashboard.html",
-    "help": "node index.js --help"
+    "collect": "node scripts/metrics-collector.js",
+    "process": "node scripts/processor.js",
+    "start": "node scripts/processor.js && http-server -o dashboard.html"
   },
   "dependencies": {
     "@octokit/rest": "^19.0.0",

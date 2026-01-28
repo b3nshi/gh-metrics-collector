@@ -1,8 +1,7 @@
 node_modules/
-data.json
-ui-data.json
-ui-stats.json
-ui-details.json
-.pending_state.json
 .DS_Store
 *.env
+
+# Data files - ignore all files in data/ except README.md
+data/*
+!data/README.md

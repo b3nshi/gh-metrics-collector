@@ -1,9 +1,15 @@
 const fs = require('fs');
+const path = require('path');
+
+const DATA_DIR = 'data';
+const DATA_FILE = path.join(DATA_DIR, 'data.json');
+const UI_STATS_FILE = path.join(DATA_DIR, 'ui-stats.json');
+const UI_DETAILS_FILE = path.join(DATA_DIR, 'ui-details.json');
 
 function processMetrics() {
-    if (!fs.existsSync('data.json')) return console.error("❌ No data.json found.");
+    if (!fs.existsSync(DATA_FILE)) return console.error(`❌ No ${DATA_FILE} found.`);
 
-    const rawData = JSON.parse(fs.readFileSync('data.json'));
+    const rawData = JSON.parse(fs.readFileSync(DATA_FILE));
     const prs = rawData.prs.map(p => ({
         ...p,
         size: Number(p.size),
@@ -59,8 +65,12 @@ function processMetrics() {
         scatterData: prs.map(p => ({ x: p.size, y: p.mergeTime }))
     };
 
-    fs.writeFileSync('ui-stats.json', JSON.stringify(uiStats));
-    fs.writeFileSync('ui-details.json', JSON.stringify(prs));
+    if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    fs.writeFileSync(UI_STATS_FILE, JSON.stringify(uiStats));
+    fs.writeFileSync(UI_DETAILS_FILE, JSON.stringify(prs));
     console.log(`✅ Processed ${prs.length} PRs.`);
 }
 processMetrics();

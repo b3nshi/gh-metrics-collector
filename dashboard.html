@@ -234,7 +234,7 @@
         };
         Chart.register(verticalLinePlugin);
 
-        fetch('ui-stats.json').then(res => res.json()).then(data => {
+        fetch('data/ui-stats.json').then(res => res.json()).then(data => {
             reportData = data;
             document.getElementById('repo-name').innerText = data.repoInfo.name;
             document.getElementById('gen-date').innerText = `Range: ${data.period.from} to ${data.period.until}`;
@@ -325,7 +325,7 @@
             render('rank-ttm', data.rankings.mergers.filter(u=>u.merged>0), 'avgTime', true);
 
             document.getElementById('loader').classList.add('hidden-loader');
-            return fetch('ui-details.json');
+            return fetch('data/ui-details.json');
         })
         .then(res => res.json())
         .then(details => {

@@ -4,8 +4,9 @@ const { Octokit } = require("@octokit/rest");
 const fs = require('fs');
 const ora = require('ora');
 
-const STATE_FILE = '.pending_state.json';
-const DATA_FILE = 'data.json';
+const DATA_DIR = 'data';
+const STATE_FILE = `${DATA_DIR}/.pending_state.json`;
+const DATA_FILE = `${DATA_DIR}/data.json`;
 
 const program = new Command();
 
@@ -30,6 +31,10 @@ program
     };
 
     try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+
       let state = { config: options, processedIds: [], results: [], pullsToProcess: [], globalStats: {} };
       
       if (fs.existsSync(STATE_FILE)) {
